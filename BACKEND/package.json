@@ -1,0 +1,15 @@
+{
+  "name": "jandrishti-backend",
+  "version": "1.0.0",
+  "description": "Backend for JanDrishti AI - PS002 People's Priorities: AI for Constituency Development Planning",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

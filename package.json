@@ -1,0 +1,13 @@
+{
+  "name": "parakram-jandrishti-ai",
+  "version": "1.0.0",
+  "description": "JanDrishti AI - People's Priorities: AI for Constituency Development Planning",
+  "main": "BACKEND/server.js",
+  "scripts": {
+    "start": "cd BACKEND && node server.js",
+    "postinstall": "cd BACKEND && npm install"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

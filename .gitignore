@@ -1,0 +1,8 @@
+node_modules/
+config.local.js
+**/config.local.js
+data-store.json
+**/data-store.json
+.env
+**/.env
+*.log
