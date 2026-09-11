@@ -667,6 +667,8 @@ app.get("/api/summary", (req, res) => {
     proposalCount: PROPOSALS.length,
     wards: WARDS.length,
   });
+});
+
 // ---------------------------------------------------------------------
 // STATIC FILE SERVING: Serve frontend for 1-click unified deployment
 // ---------------------------------------------------------------------
