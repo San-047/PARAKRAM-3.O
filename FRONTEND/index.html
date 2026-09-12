@@ -3521,14 +3521,45 @@
       stopLiveLocationTracking();
     }
 
-    // ====== "My Reports" tracker ======
-    function openCitizenTracker() {
-      document.getElementById("citizen-tracker-overlay").classList.remove("hidden");
-      loadCitizenTracker();
+    // ====== "My Reports" & Chat History Drawer ======
+    function switchHistoryTab(tabName) {
+      const histSection = document.getElementById("drawer-section-history");
+      const subSection  = document.getElementById("drawer-section-submissions");
+      const histBtn     = document.getElementById("tab-btn-chat-history");
+      const subBtn      = document.getElementById("tab-btn-submissions");
+
+      if (tabName === 'history') {
+        if (histSection) histSection.classList.remove("hidden");
+        if (subSection)  subSection.classList.add("hidden");
+        if (histBtn) {
+          histBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-emerald-700 shadow-sm";
+        }
+        if (subBtn) {
+          subBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+        }
+        loadChatHistoryList();
+      } else {
+        if (histSection) histSection.classList.add("hidden");
+        if (subSection)  subSection.classList.remove("hidden");
+        if (subBtn) {
+          subBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-emerald-700 shadow-sm";
+        }
+        if (histBtn) {
+          histBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+        }
+        loadCitizenTracker();
+      }
+    }
+
+    function openCitizenTracker(tabName = 'history') {
+      const overlay = document.getElementById("citizen-tracker-overlay");
+      if (overlay) overlay.classList.remove("hidden");
+      switchHistoryTab(tabName);
     }
     function closeCitizenTracker(event) {
       if (event) event.stopPropagation();
-      document.getElementById("citizen-tracker-overlay").classList.add("hidden");
+      const overlay = document.getElementById("citizen-tracker-overlay");
+      if (overlay) overlay.classList.add("hidden");
     }
 
     async function loadCitizenTracker() {
@@ -4072,6 +4103,8 @@
             const refEl = document.querySelector(`#${msgId} .citizen-ref-id`);
             if (refEl) refEl.textContent = subData.id;
           }
+          saveActiveChatSession();
+          loadCitizenTracker();
         }).catch(() => { /* backend offline - temp reference id stays, no crash */ });
       } catch (err) {
         citizenConversationHistory.pop();
@@ -4148,6 +4181,8 @@
         clearCitizenPhoto();
         clearCitizenLocation();
         if (window.lucide) lucide.createIcons();
+        saveActiveChatSession();
+        loadCitizenTracker();
       }, 400);
     }
 
