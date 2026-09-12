@@ -529,10 +529,6 @@
   <div id="citizen-view" class="hidden citizen-theme min-h-screen flex flex-col">
     <div class="citizen-topbar">
       <div class="flex items-center gap-2.5">
-        <button onclick="toggleChatHistoryDrawer()" class="citizen-track-btn flex items-center gap-1.5 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30" title="View Chat History">
-          <i data-lucide="history" class="w-3.5 h-3.5"></i>
-          <span>History</span>
-        </button>
         <div class="citizen-logo-orb"></div>
         <span class="citizen-wordmark">JanDrishti</span>
       </div>
@@ -541,9 +537,9 @@
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
           <span>New Chat</span>
         </button>
-        <button onclick="openCitizenTracker()" class="citizen-track-btn" title="Track my reports">
-          <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
-          <span>My Reports</span>
+        <button onclick="openCitizenTracker()" class="citizen-track-btn flex items-center gap-1.5" title="View Chat History & My Reports">
+          <i data-lucide="history" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>Chat History & Reports</span>
         </button>
         <span id="citizen-session-label" class="citizen-user-chip"></span>
         <button onclick="logout()" class="citizen-logout-btn" title="Log out">
@@ -552,40 +548,45 @@
       </div>
     </div>
 
-    <!-- Track My Reports - slide-over panel -->
+    <!-- History & Reports - slide-over panel -->
     <div id="citizen-tracker-overlay" class="citizen-tracker-overlay hidden" onclick="closeCitizenTracker(event)">
       <div class="citizen-tracker-panel" onclick="event.stopPropagation()">
-        <div class="citizen-tracker-header">
-          <h2 class="citizen-serif">My Reports</h2>
-          <button onclick="closeCitizenTracker()" class="citizen-icon-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
-        </div>
-        <div id="citizen-tracker-list" class="citizen-tracker-list">
-          <div class="citizen-tracker-empty">Loading…</div>
-        </div>
-    </div>
-
-    <!-- Chat History (ChatGPT Style) - slide-over panel -->
-    <div id="chat-history-drawer-overlay" class="citizen-tracker-overlay hidden" onclick="closeChatHistoryDrawer(event)">
-      <div class="citizen-tracker-panel" onclick="event.stopPropagation()">
-        <div class="citizen-tracker-header flex items-center justify-between border-b border-slate-200 pb-3">
-          <div class="flex items-center gap-2">
-            <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i>
-            <h2 class="citizen-serif text-lg font-bold text-slate-800">Chat History</h2>
+        <div class="citizen-tracker-header border-b border-slate-200 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="citizen-serif text-lg font-bold text-slate-800">History & Reports</h2>
+            <button onclick="closeCitizenTracker()" class="citizen-icon-btn text-slate-500 hover:text-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
           </div>
-          <button onclick="closeChatHistoryDrawer()" class="citizen-icon-btn text-slate-500 hover:text-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+          
+          <!-- Tab switch: Chat History vs Tracked Submissions -->
+          <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+            <button type="button" id="tab-btn-chat-history" onclick="switchHistoryTab('history')" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-emerald-700 shadow-sm">
+              💬 Chat History
+            </button>
+            <button type="button" id="tab-btn-submissions" onclick="switchHistoryTab('submissions')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+              📋 My Submissions
+            </button>
+          </div>
         </div>
 
-        <!-- Big + New Chat Button right at top of History Drawer (ChatGPT style) -->
-        <div class="p-3 bg-slate-50 border-b border-slate-200">
-          <button onclick="startNewChatSession(); closeChatHistoryDrawer();" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
+        <!-- Section 1: Chat History -->
+        <div id="drawer-section-history" class="p-3 space-y-3">
+          <button onclick="startNewChatSession(); closeCitizenTracker();" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
-            <span>+ New Chat</span>
+            <span>+ New Chat Page</span>
           </button>
+
+          <div id="chat-history-list" class="space-y-2 overflow-y-auto max-h-[calc(100vh-200px)]">
+            <div class="citizen-tracker-empty text-xs text-slate-400">Loading chat history…</div>
+          </div>
         </div>
 
-        <div id="chat-history-list" class="citizen-tracker-list p-3 space-y-2 overflow-y-auto max-h-[calc(100vh-140px)]">
-          <div class="citizen-tracker-empty text-xs text-slate-400">Loading chat history…</div>
+        <!-- Section 2: Tracked Reports -->
+        <div id="drawer-section-submissions" class="hidden p-3">
+          <div id="citizen-tracker-list" class="citizen-tracker-list overflow-y-auto max-h-[calc(100vh-180px)]">
+            <div class="citizen-tracker-empty">Loading…</div>
+          </div>
         </div>
+
       </div>
     </div>
 
