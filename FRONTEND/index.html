@@ -587,10 +587,13 @@
               <i data-lucide="camera" class="w-4 h-4"></i>
             </button>
             <div id="citizen-photo-menu" class="citizen-photo-menu hidden">
-              <button type="button" onclick="openCitizenCameraModal()">
-                <i data-lucide="camera" class="w-4 h-4"></i> Take Photo
+              <button type="button" onclick="cameraModalCaller='citizen'; triggerNativeCameraInput(); closeCitizenPhotoMenuOnce();">
+                <i data-lucide="camera" class="w-4 h-4"></i> Take Photo (Camera App)
               </button>
-              <button type="button" onclick="triggerCitizenGallery()">
+              <button type="button" onclick="openCitizenCameraModal(); closeCitizenPhotoMenuOnce();">
+                <i data-lucide="video" class="w-4 h-4"></i> Live Web Viewfinder
+              </button>
+              <button type="button" onclick="triggerCitizenGallery(); closeCitizenPhotoMenuOnce();">
                 <i data-lucide="image" class="w-4 h-4"></i> Choose from Gallery
               </button>
             </div>
@@ -835,10 +838,13 @@
                 <i data-lucide="camera" class="w-4 h-4"></i>
               </button>
               <div id="officer-photo-menu" class="citizen-photo-menu hidden bg-white border border-slate-200 shadow-xl text-slate-700">
-                <button type="button" onclick="openOfficerCameraModal()" class="text-slate-700 hover:bg-slate-100 hover:text-sky-600">
-                  <i data-lucide="camera" class="w-4 h-4"></i> Take Photo
+                <button type="button" onclick="cameraModalCaller='officer'; triggerNativeCameraInput(); closeOfficerPhotoMenuOnce();" class="text-slate-700 hover:bg-slate-100 hover:text-sky-600">
+                  <i data-lucide="camera" class="w-4 h-4"></i> Take Photo (Camera App)
                 </button>
-                <button type="button" onclick="triggerOfficerGallery()" class="text-slate-700 hover:bg-slate-100 hover:text-sky-600">
+                <button type="button" onclick="openOfficerCameraModal(); closeOfficerPhotoMenuOnce();" class="text-slate-700 hover:bg-slate-100 hover:text-sky-600">
+                  <i data-lucide="video" class="w-4 h-4"></i> Live Web Viewfinder
+                </button>
+                <button type="button" onclick="triggerOfficerGallery(); closeOfficerPhotoMenuOnce();" class="text-slate-700 hover:bg-slate-100 hover:text-sky-600">
                   <i data-lucide="image" class="w-4 h-4"></i> Choose from Gallery
                 </button>
               </div>
@@ -3197,6 +3203,12 @@
       const officerMenu = document.getElementById("officer-photo-menu");
       if (officerMenu) officerMenu.classList.add("hidden");
 
+      // Mobile devices work 100x better with native camera app directly
+      if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        triggerNativeCameraInput();
+        return;
+      }
+
       const modal = document.getElementById("citizen-camera-modal");
       const errorBox = document.getElementById("citizen-camera-error");
       const video = document.getElementById("citizen-camera-video");
@@ -3208,7 +3220,7 @@
         if (errorBox) {
           errorBox.classList.remove("hidden");
           const errorMsg = document.getElementById("citizen-camera-error-msg");
-          if (errorMsg) errorMsg.innerText = "Camera API is not supported in this browser environment.";
+          if (errorMsg) errorMsg.innerText = "Camera API is not supported in this browser. Please use native camera.";
         }
         return;
       }
@@ -3240,7 +3252,7 @@
             const errorMsg = document.getElementById("citizen-camera-error-msg");
             if (errorMsg) {
               errorMsg.innerText = err.name === "NotAllowedError"
-                ? "Camera permission was denied. Please allow camera access in your browser."
+                ? "Camera permission was denied. Please allow camera access or use native camera app."
                 : "No camera device found or camera is in use by another application.";
             }
           }
@@ -3257,7 +3269,6 @@
       if (video) video.srcObject = null;
       const modal = document.getElementById("citizen-camera-modal");
       if (modal) modal.classList.add("hidden");
-      cameraModalCaller = "citizen";
     }
 
     function fallbackToCitizenGallery() {
@@ -3314,7 +3325,6 @@
       }
 
       if (!video || !canvas) {
-        showToast("Camera Error", "Camera component not ready. Opening device camera...", "warning");
         triggerNativeCameraInput();
         return;
       }
@@ -3327,11 +3337,18 @@
 
       try {
         ctx.drawImage(video, 0, 0, w, h);
-      } catch (e) {
-        console.warn("[Camera] Draw image failed:", e);
-      }
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        
+        const arr = dataUrl.split(",");
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const file = new File([u8arr], `camera_${Date.now()}.jpg`, { type: mime });
 
-      const onCapturedFile = (file) => {
         const isOfficer = cameraModalCaller === "officer";
         closeCitizenCameraModal();
         if (isOfficer) {
@@ -3339,25 +3356,10 @@
         } else {
           processCitizenVisionFile(file, true);
         }
-        showToast("Photo Captured!", "Photo captured & attached to report. Ready to send!", "success");
-      };
-
-      if (canvas.toBlob) {
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-            fetch(dataUrl).then(r => r.blob()).then(b => {
-              onCapturedFile(new File([b], `camera_${Date.now()}.jpg`, { type: "image/jpeg" }));
-            }).catch(() => triggerNativeCameraInput());
-            return;
-          }
-          onCapturedFile(new File([blob], `camera_${Date.now()}.jpg`, { type: "image/jpeg" }));
-        }, "image/jpeg", 0.92);
-      } else {
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-        fetch(dataUrl).then(r => r.blob()).then(b => {
-          onCapturedFile(new File([b], `camera_${Date.now()}.jpg`, { type: "image/jpeg" }));
-        }).catch(() => triggerNativeCameraInput());
+        showToast("Photo Captured!", "Photo captured & attached to report!", "success");
+      } catch (err) {
+        console.warn("[Camera] Capture failed, opening native camera:", err);
+        triggerNativeCameraInput();
       }
     }
 
