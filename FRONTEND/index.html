@@ -421,19 +421,24 @@
         <!-- ===== CITIZEN LOGIN FORM ===== -->
         <div id="citizen-auth-panel">
           <div id="citizen-login-form" class="space-y-3">
-            <h2 class="citizen-serif" style="font-size: 15px; font-weight: 600; color: var(--dawn-text); margin-bottom: 2px;">Citizen Login</h2>
-            <p style="font-size: 11px; color: var(--dawn-text-soft); margin-bottom: 12px;">Report issues and track your submissions</p>
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="citizen-serif" style="font-size: 15px; font-weight: 600; color: var(--dawn-text); margin-bottom: 2px;">Citizen Login</h2>
+                <p style="font-size: 11px; color: var(--dawn-text-soft);">Report issues and track your submissions</p>
+              </div>
+              <button type="button" onclick="autoFillCitizenDemo()" class="px-2.5 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 border border-emerald-700/50 rounded-lg text-[10px] font-bold transition-all" title="Auto fill demo credentials">⚡ Auto Fill</button>
+            </div>
 
             <div>
               <label style="display:block; font-size: 11px; font-weight: 600; color: var(--dawn-text-soft); margin-bottom: 4px;">Email</label>
-              <input type="email" id="citizen-login-email" class="auth-input" placeholder="you@example.com">
+              <input type="email" id="citizen-login-email" class="auth-input" value="shubhranshu@gmail.com" placeholder="you@example.com">
             </div>
             <div>
               <label style="display:block; font-size: 11px; font-weight: 600; color: var(--dawn-text-soft); margin-bottom: 4px;">Password</label>
-              <input type="password" id="citizen-login-password" class="auth-input" placeholder="••••••••">
+              <input type="password" id="citizen-login-password" class="auth-input" value="Password123" placeholder="••••••••">
             </div>
             <div id="citizen-login-error" class="hidden auth-error"></div>
-            <button type="button" onclick="citizenLogin()" class="auth-btn-primary">Log In</button>
+            <button type="button" onclick="citizenLogin()" class="auth-btn-primary cursor-pointer">Log In</button>
             <p style="text-align:center; font-size: 11px; color: var(--dawn-text-soft); padding-top: 4px;">
               New here? <button type="button" onclick="showCitizenRegister()" style="color: var(--dawn-3); font-weight: 600; text-decoration: underline;">Create an account</button>
               &nbsp;·&nbsp;
@@ -456,7 +461,7 @@
             </div>
             <div id="citizen-forgot-error" class="hidden auth-error"></div>
             <div id="citizen-forgot-success" class="hidden" style="font-size: 11px; color: #7FCB9E; background: #1F3D2C; border: 1px solid #2C4638; border-radius: 10px; padding: 8px;"></div>
-            <button type="button" onclick="citizenResetPassword()" class="auth-btn-primary">Update Password</button>
+            <button type="button" onclick="citizenResetPassword()" class="auth-btn-primary cursor-pointer">Update Password</button>
             <p style="text-align:center; font-size: 11px; color: var(--dawn-text-soft); padding-top: 4px;">
               <button type="button" onclick="showCitizenLogin()" style="color: var(--dawn-3); font-weight: 600; text-decoration: underline;">Back to log in</button>
             </p>
@@ -480,7 +485,7 @@
               <input type="password" id="citizen-reg-password" class="auth-input" placeholder="••••••••">
             </div>
             <div id="citizen-register-error" class="hidden auth-error"></div>
-            <button type="button" onclick="citizenRegister()" class="auth-btn-primary">Create Account & Log In</button>
+            <button type="button" onclick="citizenRegister()" class="auth-btn-primary cursor-pointer">Create Account & Log In</button>
             <p style="text-align:center; font-size: 11px; color: var(--dawn-text-soft); padding-top: 4px;">
               Already have an account? <button type="button" onclick="showCitizenLogin()" style="color: var(--dawn-3); font-weight: 600; text-decoration: underline;">Log in</button>
             </p>
@@ -489,23 +494,28 @@
 
         <!-- ===== EMPLOYEE LOGIN FORM ===== -->
         <div id="employee-auth-panel" class="hidden space-y-3">
-          <h2 class="citizen-serif" style="font-size: 15px; font-weight: 600; color: var(--dawn-text); margin-bottom: 2px;">Government Employee Login</h2>
-          <p style="font-size: 11px; color: var(--dawn-text-soft); margin-bottom: 12px;">Requires official Employee ID for verification</p>
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="citizen-serif" style="font-size: 15px; font-weight: 600; color: var(--dawn-text); margin-bottom: 2px;">Government Employee Login</h2>
+              <p style="font-size: 11px; color: var(--dawn-text-soft);">Requires official Employee ID for verification</p>
+            </div>
+            <button type="button" onclick="autoFillEmployeeDemo()" class="px-2.5 py-1 bg-sky-900/60 hover:bg-sky-800 text-sky-300 border border-sky-700/50 rounded-lg text-[10px] font-bold transition-all" title="Auto fill demo credentials">⚡ Auto Fill</button>
+          </div>
 
           <div>
             <label style="display:block; font-size: 11px; font-weight: 600; color: var(--dawn-text-soft); margin-bottom: 4px;">Official Email</label>
-            <input type="email" id="employee-login-email" class="auth-input" placeholder="you@gita.gov.in">
+            <input type="email" id="employee-login-email" class="auth-input" value="planning.officer@gita.gov.in" placeholder="you@gita.gov.in">
           </div>
           <div>
             <label style="display:block; font-size: 11px; font-weight: 600; color: var(--dawn-text-soft); margin-bottom: 4px;">Employee ID</label>
-            <input type="text" id="employee-login-id" class="auth-input" placeholder="EMP-001">
+            <input type="text" id="employee-login-id" class="auth-input" value="EMP-001" placeholder="EMP-001">
           </div>
           <div>
             <label style="display:block; font-size: 11px; font-weight: 600; color: var(--dawn-text-soft); margin-bottom: 4px;">Password</label>
-            <input type="password" id="employee-login-password" class="auth-input" placeholder="••••••••">
+            <input type="password" id="employee-login-password" class="auth-input" value="Parakram@123" placeholder="••••••••">
           </div>
           <div id="employee-login-error" class="hidden auth-error"></div>
-          <button type="button" onclick="employeeLogin()" class="auth-btn-primary" style="background: linear-gradient(135deg, var(--dawn-2), var(--dawn-1)); color: var(--dawn-text);">
+          <button type="button" onclick="employeeLogin()" class="auth-btn-primary cursor-pointer" style="background: linear-gradient(135deg, var(--dawn-2), var(--dawn-1)); color: var(--dawn-text);">
             Staff Log In
           </button>
           <div style="font-size: 10px; color: var(--dawn-text-soft); background: var(--dawn-surface-2); border: 1px solid var(--dawn-border); border-radius: 10px; padding: 8px; margin-top: 8px;">
@@ -695,6 +705,16 @@
             <option value="khandagiri">Khandagiri-Gohiria Zone</option>
           </select>
         </div>
+
+        <button onclick="startNewChatSession()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer" title="Start a fresh new chat page">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>New Chat</span>
+        </button>
+
+        <button onclick="openCitizenTracker('history')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer" title="View Chat History & Reports">
+          <i data-lucide="history" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span>History & Reports</span>
+        </button>
 
         <button id="executive-brief-btn" onclick="exportExecutiveReport()" class="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-sky-500/20 transition-all active:scale-95">
           <i data-lucide="file-text" class="w-4 h-4"></i>
@@ -1940,6 +1960,19 @@
       } catch (err) {
         showAuthError("employee-login-error", "Could not reach the backend server. Make sure it's running (npm start).");
       }
+    }
+
+    function autoFillCitizenDemo() {
+      document.getElementById("citizen-login-email").value = "shubhranshu@gmail.com";
+      document.getElementById("citizen-login-password").value = "Password123";
+      showToast("Auto-Filled", "Citizen demo credentials filled!", "info");
+    }
+
+    function autoFillEmployeeDemo() {
+      document.getElementById("employee-login-email").value = "planning.officer@gita.gov.in";
+      document.getElementById("employee-login-id").value = "EMP-001";
+      document.getElementById("employee-login-password").value = "Parakram@123";
+      showToast("Auto-Filled", "Staff demo credentials filled!", "info");
     }
 
     function completeLogin(sessionData) {
@@ -3766,7 +3799,13 @@
         if (thread) {
           thread.innerHTML = "";
           citizenConversationHistory.forEach(m => {
-            appendCitizenMessage(m.role, escapeHtml(m.text));
+            const rawText = typeof m.text === "string" ? m.text : (typeof m.content === "string" ? m.content : "");
+            if (!rawText) return;
+            if (rawText.includes("<") && rawText.includes(">")) {
+              appendCitizenMessage(m.role || "assistant", rawText);
+            } else {
+              appendCitizenMessage(m.role || "assistant", escapeHtml(rawText));
+            }
           });
         }
 
