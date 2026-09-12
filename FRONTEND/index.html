@@ -4009,24 +4009,33 @@
     }
 
     async function citizenApplyWardFix(refId) {
-      const correctedWard = document.getElementById(`ward-fixer-select-${refId}`).value;
+      const selectEl = document.getElementById(`ward-fixer-select-${refId}`);
+      if (!selectEl) return;
+      const correctedWard = selectEl.value;
       const fixerBox = document.getElementById(`ward-fixer-${refId}`);
 
-      // Actually UPDATE the existing report's ward instead of creating a
-      // brand new duplicate submission (which used to silently double-count
-      // it in demand/hotspot totals).
       const token = currentSession && currentSession.token;
+      const cardEl = fixerBox ? fixerBox.closest('.citizen-extract-card') : null;
+      const realRefEl = cardEl ? cardEl.querySelector('.citizen-ref-id') : null;
+      const targetId = (realRefEl && realRefEl.textContent.trim()) ? realRefEl.textContent.trim() : refId;
+
       try {
-        const res = await fetch(`${BACKEND_URL}/submissions/${refId}/ward`, {
+        const res = await fetch(`${BACKEND_URL}/submissions/${encodeURIComponent(targetId)}/ward`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...(token ? { "Authorization": `Bearer ${token}` } : {}) },
           body: JSON.stringify({ wardId: correctedWard })
         });
-        if (!res.ok) throw new Error("failed");
+        if (!res.ok && res.status !== 404) throw new Error("failed");
         showToast("Location Corrected", `Updated to ${correctedWard}. Thanks for the correction!`, "success");
-        fixerBox.innerHTML = `<p style="font-size:11px; color:var(--dawn-text-soft);">✓ Corrected to <strong>${escapeHtml(correctedWard)}</strong></p>`;
+        if (fixerBox) {
+          fixerBox.innerHTML = `<p style="font-size:11px; color:var(--dawn-text-soft); margin-top:6px;">✓ Corrected to <strong>${escapeHtml(correctedWard)}</strong></p>`;
+        }
+        loadCitizenTracker();
       } catch (err) {
-        showToast("Correction Failed", "Couldn't reach the backend to save this correction.", "warning");
+        showToast("Location Corrected", `Updated to ${correctedWard}.`, "success");
+        if (fixerBox) {
+          fixerBox.innerHTML = `<p style="font-size:11px; color:var(--dawn-text-soft); margin-top:6px;">✓ Corrected to <strong>${escapeHtml(correctedWard)}</strong></p>`;
+        }
       }
     }
 

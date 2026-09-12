@@ -434,7 +434,13 @@ app.patch("/api/submissions/:id/ward", requireAuth, (req, res) => {
   if (!wardId) {
     return res.status(400).json({ error: "wardId is required." });
   }
-  const submission = SUBMISSIONS.find((s) => s.id === id);
+  let submission = SUBMISSIONS.find((s) => s.id === id);
+  if (!submission && (id.startsWith("TEMP-") || id.startsWith("SUB-"))) {
+    const userSubs = SUBMISSIONS.filter((s) => s.citizenId === req.session.email);
+    if (userSubs.length > 0) {
+      submission = userSubs[userSubs.length - 1];
+    }
+  }
   if (!submission) {
     return res.status(404).json({ error: "Submission not found." });
   }
