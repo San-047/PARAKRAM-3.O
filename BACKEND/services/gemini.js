@@ -63,7 +63,7 @@ Known categories (use EXACTLY these strings): ${KNOWN_CATEGORIES.join(", ")}
 
 Given the full conversation so far, reply with ONLY a raw JSON object (no markdown, no code fences, no extra text) with exactly these keys:
 {
-  "reply": "a warm, natural, highly helpful response (1-3 sentences), addressing the user's message accurately and intelligently like a real AI assistant",
+  "reply": "a warm, natural, highly helpful response (1-3 sentences), written in the requested target language",
   "category": "one of the known categories above if clearly implied by the conversation, else null",
   "ward": "the closest matching known ward string above if mentioned or implied, else null",
   "isCompleteReport": true only if you now know BOTH a category AND a ward from this conversation (across all turns), else false
@@ -72,7 +72,7 @@ Given the full conversation so far, reply with ONLY a raw JSON object (no markdo
 Rules:
 - If a user is reporting a civic issue but category or ward is missing, ask a brief, friendly clarifying question in "reply".
 - If the user is just greeting, asking a general question, or having a general conversation, answer their question directly, warmly, and intelligently without forcing a report.
-- If they write in Odia, Hindi, Bengali, Hinglish, or English, understand it perfectly and reply in clear, friendly English (or simple multilingual-friendly text).
+- CRITICAL LANGUAGE RULE: You MUST write your "reply" in the EXACT TARGET LANGUAGE specified in the instruction below (Odia/ଓଡ଼ିଆ for Odia, Hindi/हिंदी/Hinglish for Hindi, Bengali/বাংলা for Bengali, English for English).
 - Keep "reply" natural, empathetic, dynamic, and specific to their message — NEVER generic or repetitive.`;
 
 async function delay(ms) {
@@ -100,10 +100,16 @@ async function chatWithGemini(conversationTurns, languageHint) {
     parts: [{ text: turn.text }],
   }));
 
-  const languageNames = { or: "Odia", hi: "Hindi", bn: "Bengali", en: "English" };
-  const languageNote = languageHint && languageNames[languageHint]
-    ? `\n\nThe citizen has set their input language to ${languageNames[languageHint]}. Assume their messages are in this language (including if typed in Roman/English letters phonetically) unless a message is clearly in a different language.`
-    : "";
+  const languageInstructions = {
+    or: "CRITICAL MANDATE: You MUST write your entire 'reply' in Odia (ଓଡ଼ିଆ) language (either in Odia script or Romanized Odia/English letters). Do NOT reply in plain English.",
+    hi: "CRITICAL MANDATE: You MUST write your entire 'reply' in Hindi (हिंदी) or Hinglish language (in Devanagari script or Hinglish Roman letters). Do NOT reply in plain English.",
+    bn: "CRITICAL MANDATE: You MUST write your entire 'reply' in Bengali (বাংলা) language (in Bengali script or Romanized Bengali). Do NOT reply in plain English.",
+    en: "CRITICAL MANDATE: Write your entire 'reply' in clear, friendly English."
+  };
+
+  const languageNote = languageHint && languageInstructions[languageHint]
+    ? `\n\n${languageInstructions[languageHint]}`
+    : `\n\nCRITICAL MANDATE: Write your 'reply' in the matching target language requested by the user.`;
 
   const body = {
     system_instruction: { parts: [{ text: SYSTEM_PROMPT + languageNote }] },
