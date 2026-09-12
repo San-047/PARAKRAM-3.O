@@ -85,7 +85,14 @@ async function chatWithGemini(conversationTurns, languageHint) {
 
   const apiKey = getRawKey();
   const primaryModel = getModelName();
-  const candidateModels = Array.from(new Set([primaryModel, "gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"]));
+  const candidateModels = Array.from(new Set([
+    primaryModel,
+    "gemini-3.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-flash-latest"
+  ]));
 
   const contents = conversationTurns.map((turn) => ({
     role: turn.role === "assistant" ? "model" : "user",
@@ -108,6 +115,7 @@ async function chatWithGemini(conversationTurns, languageHint) {
 
   const MAX_RETRIES = 2;
   const REQUEST_TIMEOUT_MS = 15000;
+  let lastStatus = 0;
 
   for (const model of candidateModels) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
@@ -132,6 +140,7 @@ async function chatWithGemini(conversationTurns, languageHint) {
         if (!res.ok) {
           const errText = await res.text();
           const status = res.status;
+          lastStatus = status;
 
           // Check for invalid API key - do NOT retry
           if (
@@ -220,6 +229,10 @@ async function chatWithGemini(conversationTurns, languageHint) {
         break;
       }
     }
+  }
+
+  if (lastStatus === 429) {
+    return { error: "RATE_LIMIT", detail: "Gemini API rate limit exceeded (HTTP 429)" };
   }
 
   return { error: "API_ERROR", detail: "Exceeded retry attempts" };

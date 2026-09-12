@@ -3085,11 +3085,15 @@
               errorMsg = "AI request timed out — using local assistant.";
             } else if (data.reason === "NETWORK_ERROR") {
               errorMsg = "Network error connecting to AI — using local assistant.";
+            } else if (data.reason === "RATE_LIMIT") {
+              errorMsg = "AI rate limit reached — using local civic assistant.";
             } else if (data.reason === "MODEL_ERROR" || data.reason === "API_ERROR") {
-              errorMsg = "AI service temporarily unavailable — using local assistant.";
+              errorMsg = "AI service temporarily busy — using local assistant.";
             }
             showToast("Assistant Fallback", errorMsg, "warning");
-            officerAiAvailable = false;
+            if (data.reason === "NO_API_KEY" || data.reason === "INVALID_API_KEY") {
+              officerAiAvailable = false;
+            }
           }
           officerConversationHistory.pop();
           if (typingEl) typingEl.remove();
@@ -4024,11 +4028,15 @@
               errorMsg = "AI request timed out — using local assistant.";
             } else if (data.reason === "NETWORK_ERROR") {
               errorMsg = "Network error connecting to AI — using local assistant.";
+            } else if (data.reason === "RATE_LIMIT") {
+              errorMsg = "AI rate limit reached — using local civic assistant.";
             } else if (data.reason === "MODEL_ERROR" || data.reason === "API_ERROR") {
-              errorMsg = "AI service temporarily unavailable — using local assistant.";
+              errorMsg = "AI service temporarily busy — using local assistant.";
             }
             showToast("Assistant Fallback", errorMsg, "warning");
-            citizenAiAvailable = false;
+            if (data.reason === "NO_API_KEY" || data.reason === "INVALID_API_KEY") {
+              citizenAiAvailable = false;
+            }
           }
           citizenConversationHistory.pop(); // let the fallback re-derive from scratch
           submitCitizenMessageFallback(textVal, photoInfo, langVal, typingId);
