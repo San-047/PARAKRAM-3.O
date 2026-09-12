@@ -258,12 +258,12 @@
       box-shadow: 0 12px 28px -10px rgba(0,0,0,0.5); min-width: 190px;
       animation: citizenFadeUp 0.15s ease-out;
     }
-    .citizen-photo-menu button {
+    .citizen-photo-menu button, .citizen-photo-menu label {
       display: flex; align-items: center; gap: 8px; text-align: left;
       font-size: 12.5px; color: var(--dawn-text); padding: 9px 10px; border-radius: 9px;
-      background: transparent; white-space: nowrap;
+      background: transparent; white-space: nowrap; cursor: pointer;
     }
-    .citizen-photo-menu button:hover { background: var(--dawn-surface-2); color: var(--dawn-3); }
+    .citizen-photo-menu button:hover, .citizen-photo-menu label:hover { background: var(--dawn-surface-2); color: var(--dawn-3); }
 
     .citizen-lang-select {
       font-size: 11px; font-weight: 600; color: var(--dawn-3); background: var(--dawn-surface-2);
@@ -587,13 +587,10 @@
               <i data-lucide="camera" class="w-4 h-4"></i>
             </button>
             <div id="citizen-photo-menu" class="citizen-photo-menu hidden">
-              <label for="citizen-native-camera-input" onclick="cameraModalCaller='citizen'; closeCitizenPhotoMenuOnce();" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold cursor-pointer hover:bg-slate-100 rounded text-slate-700">
-                <i data-lucide="camera" class="w-4 h-4"></i> Take Photo (Camera App)
-              </label>
-              <button type="button" onclick="cameraModalCaller='citizen'; openCitizenCameraModal(); closeCitizenPhotoMenuOnce();" class="w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-slate-100 rounded text-slate-700">
-                <i data-lucide="video" class="w-4 h-4"></i> Live Web Viewfinder
+              <button type="button" onclick="cameraModalCaller='citizen'; handleTakePhotoMenuClick(event);">
+                <i data-lucide="camera" class="w-4 h-4"></i> Take Photo
               </button>
-              <label for="citizen-vision-gallery-input" onclick="closeCitizenPhotoMenuOnce();" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold cursor-pointer hover:bg-slate-100 rounded text-slate-700">
+              <label for="citizen-vision-gallery-input" onclick="closeCitizenPhotoMenuOnce();">
                 <i data-lucide="image" class="w-4 h-4"></i> Choose from Gallery
               </label>
             </div>
@@ -838,13 +835,10 @@
                 <i data-lucide="camera" class="w-4 h-4"></i>
               </button>
               <div id="officer-photo-menu" class="citizen-photo-menu hidden bg-white border border-slate-200 shadow-xl text-slate-700">
-                <label for="officer-native-camera-input" onclick="cameraModalCaller='officer'; closeOfficerPhotoMenuOnce();" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold cursor-pointer hover:bg-slate-100 rounded text-slate-700">
-                  <i data-lucide="camera" class="w-4 h-4"></i> Take Photo (Camera App)
-                </label>
-                <button type="button" onclick="openOfficerCameraModal(); closeOfficerPhotoMenuOnce();" class="w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-slate-100 rounded text-slate-700">
-                  <i data-lucide="video" class="w-4 h-4"></i> Live Web Viewfinder
+                <button type="button" onclick="cameraModalCaller='officer'; handleTakePhotoMenuClick(event);" class="text-slate-700 hover:bg-slate-100 hover:text-sky-600">
+                  <i data-lucide="camera" class="w-4 h-4"></i> Take Photo
                 </button>
-                <label for="officer-vision-gallery-input" onclick="closeOfficerPhotoMenuOnce();" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold cursor-pointer hover:bg-slate-100 rounded text-slate-700">
+                <label for="officer-vision-gallery-input" onclick="closeOfficerPhotoMenuOnce();" class="text-slate-700 hover:bg-slate-100 hover:text-sky-600 cursor-pointer">
                   <i data-lucide="image" class="w-4 h-4"></i> Choose from Gallery
                 </label>
               </div>
@@ -3286,6 +3280,26 @@
         triggerOfficerGallery();
       } else {
         triggerCitizenGallery();
+      }
+    }
+
+    function handleTakePhotoMenuClick(event) {
+      if (event) event.stopPropagation();
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isOfficer = cameraModalCaller === "officer";
+
+      if (isMobile) {
+        // Mobile device (Android/iOS): trigger native device camera picker directly!
+        const camInputId = isOfficer ? "officer-native-camera-input" : "citizen-native-camera-input";
+        const camInput = document.getElementById(camInputId);
+        if (camInput) camInput.click();
+        closeCitizenPhotoMenuOnce();
+        closeOfficerPhotoMenuOnce();
+      } else {
+        // Desktop/Laptop: open live webcam viewfinder overlay with shutter button!
+        closeCitizenPhotoMenuOnce();
+        closeOfficerPhotoMenuOnce();
+        openCitizenCameraModal();
       }
     }
 
