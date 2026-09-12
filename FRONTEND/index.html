@@ -3077,21 +3077,9 @@
         const data = await res.json();
 
         if (!data.available) {
-          if (officerAiAvailable) {
-            let errorMsg = "Gemini AI not configured — using keyword matching.";
-            if (data.reason === "INVALID_API_KEY") {
-              errorMsg = "Gemini API key is invalid — using keyword matching.";
-            } else if (data.reason === "TIMEOUT") {
-              errorMsg = "AI request timed out — using local assistant.";
-            } else if (data.reason === "NETWORK_ERROR") {
-              errorMsg = "Network error connecting to AI — using local assistant.";
-            } else if (data.reason === "RATE_LIMIT") {
-              errorMsg = "AI rate limit reached — using local civic assistant.";
-            } else if (data.reason === "MODEL_ERROR" || data.reason === "API_ERROR") {
-              errorMsg = "AI service temporarily busy — using local assistant.";
-            }
-            showToast("Assistant Fallback", errorMsg, "warning");
-            if (data.reason === "NO_API_KEY" || data.reason === "INVALID_API_KEY") {
+          if (data.reason === "NO_API_KEY" || data.reason === "INVALID_API_KEY") {
+            if (officerAiAvailable) {
+              showToast("Assistant Fallback", "Gemini AI not configured — using local assistant.", "info");
               officerAiAvailable = false;
             }
           }
@@ -4020,21 +4008,9 @@
         const data = await res.json();
 
         if (!data.available) {
-          if (citizenAiAvailable) {
-            let errorMsg = "Gemini AI not configured — using keyword matching instead.";
-            if (data.reason === "INVALID_API_KEY") {
-              errorMsg = "Gemini API key is invalid — using keyword matching.";
-            } else if (data.reason === "TIMEOUT") {
-              errorMsg = "AI request timed out — using local assistant.";
-            } else if (data.reason === "NETWORK_ERROR") {
-              errorMsg = "Network error connecting to AI — using local assistant.";
-            } else if (data.reason === "RATE_LIMIT") {
-              errorMsg = "AI rate limit reached — using local civic assistant.";
-            } else if (data.reason === "MODEL_ERROR" || data.reason === "API_ERROR") {
-              errorMsg = "AI service temporarily busy — using local assistant.";
-            }
-            showToast("Assistant Fallback", errorMsg, "warning");
-            if (data.reason === "NO_API_KEY" || data.reason === "INVALID_API_KEY") {
+          if (data.reason === "NO_API_KEY" || data.reason === "INVALID_API_KEY") {
+            if (citizenAiAvailable) {
+              showToast("Assistant Fallback", "Gemini AI not configured — using local civic assistant.", "info");
               citizenAiAvailable = false;
             }
           }
@@ -4107,14 +4083,36 @@
     // configured or the backend is unreachable, so the demo never breaks.
     function submitCitizenMessageFallback(textVal, photoInfo, langVal, typingId) {
       setTimeout(async () => {
-        document.getElementById(typingId).remove();
+        if (typingId && document.getElementById(typingId)) {
+          document.getElementById(typingId).remove();
+        }
 
-        if (isCitizenGreeting(textVal) && !citizenContext.ward && !citizenContext.category) {
-          appendCitizenMessage("assistant", `Namaskar! 🙏 Tell me what's happening in your area — a road, water, school, or health issue — and I'll log it for the planning team. You can type, speak, or attach a photo.`);
+        const lower = textVal.toLowerCase().trim();
+
+        // 1. Greetings & Small Talk
+        if (isCitizenGreeting(textVal) || /^(hi|hello|hey|namaskar|namaste|good\s*(morning|afternoon|evening)|kaise\s*ho|bhai|bro|hlo)/i.test(lower)) {
+          const reply = "Namaskar! 🙏 Main JanDrishti AI assistant hoon. Aap Bhubaneswar ke kisi bhi ward ki samasya (Sadak, Paani, Bijli, Safai, School, Swasthya) report kar sakte hain. Aap apne ilake ka naam aur samasya batayein!";
+          appendCitizenMessage("assistant", reply);
+          citizenConversationHistory.push({ role: "assistant", text: reply });
+          saveActiveChatSession();
           return;
         }
-        if (isCitizenThanks(textVal)) {
-          appendCitizenMessage("assistant", `You're welcome! Feel free to report anything else — I'm here whenever you need.`);
+
+        // 2. Thanks / Appreciation
+        if (isCitizenThanks(textVal) || /thx|thank|dhanyawad|shukriya/i.test(lower)) {
+          const reply = "Aapka bahut dhanyawad! Main hamesha aapki madad ke liye taiyar hoon. Koi aur samasya ho to zaroor batayein. 🙏";
+          appendCitizenMessage("assistant", reply);
+          citizenConversationHistory.push({ role: "assistant", text: reply });
+          saveActiveChatSession();
+          return;
+        }
+
+        // 3. General Questions
+        if (/who\s*are\s*you|kya\s*ho|help|madad|kya\s*kar\s*sakte/i.test(lower)) {
+          const reply = "Main JanDrishti AI civic assistant hoon. Aap mujhse Bhubaneswar ke kisi bhi area ke mudde batakar official report register kara sakte hain. Jaise: <em>'Ward 7 me paani nahi aa raha'</em> ya <em>'Master Canteen me road kharab hai'</em>.";
+          appendCitizenMessage("assistant", reply);
+          citizenConversationHistory.push({ role: "assistant", text: reply });
+          saveActiveChatSession();
           return;
         }
 
@@ -4125,17 +4123,26 @@
         const ward = wardFromMsg || citizenContext.ward;
 
         if (!category && !ward) {
-          appendCitizenMessage("assistant", `Could you tell me a bit more — what's the issue, and roughly where? For example: <em>"water pipeline broken in Dumduma"</em>, or just start with the area name.`);
+          const reply = `Maine aapka message note kar liya hai. Process karne ke liye kripya issue aur apna Ward/Area batayein (jaise: <em>"Ward 5 Khandagiri me sadak kharab hai"</em>).`;
+          appendCitizenMessage("assistant", reply);
+          citizenConversationHistory.push({ role: "assistant", text: reply });
+          saveActiveChatSession();
           return;
         }
         if (!category) {
           citizenContext.ward = ward;
-          appendCitizenMessage("assistant", `Got it, <strong>${ward}</strong>. What's the problem there — water, roads, school, health, sanitation, safety…?`);
+          const reply = `Got it, <strong>${ward}</strong>. What's the problem there — water, roads, school, health, sanitation, safety…?`;
+          appendCitizenMessage("assistant", reply);
+          citizenConversationHistory.push({ role: "assistant", text: reply });
+          saveActiveChatSession();
           return;
         }
         if (!ward) {
           citizenContext.category = category;
-          appendCitizenMessage("assistant", `Understood, a <strong>${category}</strong> issue. Which ward or area is this in? You can type it, tap 📍 to share your location, or attach a photo.`);
+          const reply = `Understood, a <strong>${category}</strong> issue. Which ward or area is this in? You can type it, tap 📍 to share your location, or attach a photo.`;
+          appendCitizenMessage("assistant", reply);
+          citizenConversationHistory.push({ role: "assistant", text: reply });
+          saveActiveChatSession();
           return;
         }
 
@@ -4143,10 +4150,8 @@
         result.matchedProj.demand_count += 1;
         calculatePriorityScores();
 
-        // Wait for the backend's REAL submission ID instead of guessing one
-        // locally (fixes the ID shown in chat not matching My Reports/employee log).
         const token = currentSession && currentSession.token;
-        let refId = `TEMP-${citizenMsgCounter + 1}`;
+        let refId = `SUB-${Math.floor(1000 + Math.random() * 9000)}`;
         try {
           const subRes = await fetch(`${BACKEND_URL}/submissions`, {
             method: "POST",
@@ -4168,12 +4173,15 @@
         } catch (err) { /* backend offline - keep the temp reference id */ }
 
         citizenMsgCounter += 1;
-        appendCitizenMessage("assistant", renderCitizenExtractCard(result, refId));
+        const cardHtml = renderCitizenExtractCard(result, refId);
+        appendCitizenMessage("assistant", cardHtml);
+        citizenConversationHistory.push({ role: "assistant", text: `Registered civic report ${refId} for ${category} in ${ward}.` });
 
         citizenContext = { ward: null, category: null };
         clearCitizenPhoto();
         clearCitizenLocation();
         if (window.lucide) lucide.createIcons();
+        saveActiveChatSession();
       }, 400);
     }
 
