@@ -204,6 +204,11 @@ let SESSIONS = {};
 // projectId -> { assignedTo, assignedDate, deadlineDate, status, completedDate }
 let PROJECT_ASSIGNMENTS = {};
 
+// ---------------------------------------------------------------------
+// CHAT SESSIONS HISTORY (ChatGPT-style conversation sessions)
+// ---------------------------------------------------------------------
+let CHAT_SESSIONS = [];
+
 module.exports = {
   WARDS,
   INFRA_BASELINE,
@@ -215,6 +220,7 @@ module.exports = {
   EMPLOYEES,
   SESSIONS,
   PROJECT_ASSIGNMENTS,
+  CHAT_SESSIONS,
   // Exposed so the persistence layer can save/restore these counters too -
   // otherwise restoring old submissions/citizens from disk but resetting
   // the counters to 0 could generate duplicate IDs.

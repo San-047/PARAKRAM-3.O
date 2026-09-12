@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 
-const { WARDS, INFRA_BASELINE, PROPOSALS, SUBMISSIONS, nextSubmissionId, CITIZENS, nextCitizenId, EMPLOYEES, SESSIONS, PROJECT_ASSIGNMENTS } = require("./data");
+const { WARDS, INFRA_BASELINE, PROPOSALS, SUBMISSIONS, nextSubmissionId, CITIZENS, nextCitizenId, EMPLOYEES, SESSIONS, PROJECT_ASSIGNMENTS, CHAT_SESSIONS } = require("./data");
 const dataModule = require("./data"); // whole-module reference for the persistence layer
 const { loadPersistedState, schedulePersist } = require("./services/persistence");
 const nlp = require("./services/nlp");
@@ -376,6 +376,53 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     return res.status(200).json({ available: false, reason: result.error });
   }
   res.json({ available: true, ...result });
+});
+
+// ---------------------------------------------------------------------
+// CHAT SESSION HISTORY ENDPOINTS (ChatGPT Style)
+// ---------------------------------------------------------------------
+app.get("/api/chat-sessions", requireAuth, (req, res) => {
+  const userSessions = CHAT_SESSIONS.filter((s) => s.userId === req.session.email);
+  userSessions.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+  res.json({ sessions: userSessions });
+});
+
+app.post("/api/chat-sessions", requireAuth, (req, res) => {
+  const { id, title, messages, role } = req.body || {};
+  if (!Array.isArray(messages)) {
+    return res.status(400).json({ error: "messages array is required" });
+  }
+  let session = CHAT_SESSIONS.find((s) => s.id === id && s.userId === req.session.email);
+  const now = new Date().toISOString();
+  if (!session) {
+    const firstMsgText = messages.find(m => m.role === "user")?.text || messages[0]?.text || "New Chat";
+    const defaultTitle = firstMsgText.length > 32 ? firstMsgText.slice(0, 32) + "…" : firstMsgText;
+    session = {
+      id: id || `CHAT-${Date.now()}`,
+      userId: req.session.email,
+      role: role || req.session.role || "citizen",
+      title: title || defaultTitle,
+      messages: messages,
+      createdAt: now,
+      updatedAt: now
+    };
+    CHAT_SESSIONS.push(session);
+  } else {
+    session.messages = messages;
+    if (title) session.title = title;
+    session.updatedAt = now;
+  }
+  schedulePersist(dataModule);
+  res.json(session);
+});
+
+app.delete("/api/chat-sessions/:id", requireAuth, (req, res) => {
+  const idx = CHAT_SESSIONS.findIndex((s) => s.id === req.params.id && s.userId === req.session.email);
+  if (idx !== -1) {
+    CHAT_SESSIONS.splice(idx, 1);
+    schedulePersist(dataModule);
+  }
+  res.json({ success: true });
 });
 
 // Corrects the ward on an EXISTING submission - previously this was done by

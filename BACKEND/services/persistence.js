@@ -36,6 +36,10 @@ function loadPersistedState(data) {
         if (p && typeof demandVolume === "number") p.demandVolume = demandVolume;
       });
     }
+    if (Array.isArray(saved.CHAT_SESSIONS)) {
+      data.CHAT_SESSIONS.length = 0;
+      data.CHAT_SESSIONS.push(...saved.CHAT_SESSIONS);
+    }
     if (typeof saved.submissionCounter === "number") data.setSubmissionCounter(saved.submissionCounter);
     if (typeof saved.citizenCounter === "number") data.setCitizenCounter(saved.citizenCounter);
 
@@ -56,7 +60,7 @@ function loadPersistedState(data) {
       }
     }
 
-    console.log(`[Persistence] Restored ${data.CITIZENS.length} citizen(s), ${data.SUBMISSIONS.length} submission(s) from data-store.json`);
+    console.log(`[Persistence] Restored ${data.CITIZENS.length} citizen(s), ${data.SUBMISSIONS.length} submission(s), ${data.CHAT_SESSIONS.length} chat session(s) from data-store.json`);
   } catch (e) {
     console.warn("[Persistence] Could not load data-store.json, starting fresh:", e.message);
   }
@@ -86,6 +90,7 @@ function persistNow(data) {
       SUBMISSIONS: data.SUBMISSIONS,
       PROJECT_ASSIGNMENTS: data.PROJECT_ASSIGNMENTS,
       PROPOSALS_DEMAND: data.PROPOSALS.map((p) => ({ id: p.id, demandVolume: p.demandVolume })),
+      CHAT_SESSIONS: data.CHAT_SESSIONS,
       SESSIONS: activeSessions,
       submissionCounter: data.getSubmissionCounter(),
       citizenCounter: data.getCitizenCounter(),

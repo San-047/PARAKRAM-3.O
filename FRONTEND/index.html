@@ -529,10 +529,18 @@
   <div id="citizen-view" class="hidden citizen-theme min-h-screen flex flex-col">
     <div class="citizen-topbar">
       <div class="flex items-center gap-2.5">
+        <button onclick="toggleChatHistoryDrawer()" class="citizen-track-btn flex items-center gap-1.5 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30" title="View Chat History">
+          <i data-lucide="history" class="w-3.5 h-3.5"></i>
+          <span>History</span>
+        </button>
         <div class="citizen-logo-orb"></div>
         <span class="citizen-wordmark">JanDrishti</span>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
+        <button onclick="startNewChatSession()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer" title="Start a fresh new chat page">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>New Chat</span>
+        </button>
         <button onclick="openCitizenTracker()" class="citizen-track-btn" title="Track my reports">
           <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
           <span>My Reports</span>
@@ -553,6 +561,30 @@
         </div>
         <div id="citizen-tracker-list" class="citizen-tracker-list">
           <div class="citizen-tracker-empty">Loading…</div>
+        </div>
+    </div>
+
+    <!-- Chat History (ChatGPT Style) - slide-over panel -->
+    <div id="chat-history-drawer-overlay" class="citizen-tracker-overlay hidden" onclick="closeChatHistoryDrawer(event)">
+      <div class="citizen-tracker-panel" onclick="event.stopPropagation()">
+        <div class="citizen-tracker-header flex items-center justify-between border-b border-slate-200 pb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i>
+            <h2 class="citizen-serif text-lg font-bold text-slate-800">Chat History</h2>
+          </div>
+          <button onclick="closeChatHistoryDrawer()" class="citizen-icon-btn text-slate-500 hover:text-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+
+        <!-- Big + New Chat Button right at top of History Drawer (ChatGPT style) -->
+        <div class="p-3 bg-slate-50 border-b border-slate-200">
+          <button onclick="startNewChatSession(); closeChatHistoryDrawer();" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>+ New Chat</span>
+          </button>
+        </div>
+
+        <div id="chat-history-list" class="citizen-tracker-list p-3 space-y-2 overflow-y-auto max-h-[calc(100vh-140px)]">
+          <div class="citizen-tracker-empty text-xs text-slate-400">Loading chat history…</div>
         </div>
       </div>
     </div>
@@ -783,9 +815,19 @@
               <div class="text-[11px] text-slate-500">Conversational intake &amp; constituency planning assistant across Odia, Hindi, Bengali, and English</div>
             </div>
           </div>
-          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 shadow-sm">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live AI Engine
-          </span>
+          <div class="flex items-center gap-2">
+            <button onclick="startNewChatSession()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer" title="Start a fresh new chat page">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>New Chat</span>
+            </button>
+            <button onclick="toggleChatHistoryDrawer()" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer" title="View Chat History">
+              <i data-lucide="history" class="w-3.5 h-3.5 text-sky-600"></i>
+              <span>History</span>
+            </button>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live AI Engine
+            </span>
+          </div>
         </div>
 
         <!-- Quick Vernacular Sample Prompts -->
@@ -1903,11 +1945,10 @@
       currentSession = sessionData;
       localStorage.setItem("jandrishti_token", sessionData.token);
       localStorage.setItem("jandrishti_role", sessionData.role);
-      // Track which citizen was last logged in so we can detect account switches
-      // and only clear the chat when the user actually changes, not on reconnect.
       if (sessionData.role === "citizen") {
         localStorage.setItem("jandrishti_last_citizen", sessionData.email);
       }
+      startNewChatSession();
       showApp(sessionData);
     }
 
@@ -3533,6 +3574,206 @@
       }
     }
 
+    // ====== ChatGPT-Style Chat History & New Chat System ======
+    let activeChatSessionId = null;
+
+    function startNewChatSession() {
+      activeChatSessionId = `CHAT-${Date.now()}`;
+      citizenConversationHistory = [];
+
+      const thread = document.getElementById("citizen-chat-thread");
+      if (thread) {
+        thread.innerHTML = `
+          <div id="citizen-hero" class="citizen-hero">
+            <div class="citizen-sunrise-orb"></div>
+            <h1 class="citizen-hero-title">Namaskar. What's happening<br>in your neighbourhood?</h1>
+            <p class="citizen-hero-sub">Tell JanDrishti about a road, water, school, or health problem — by voice, photo, or text, in your own language.</p>
+            <div class="citizen-chips">
+              <button type="button" class="citizen-chip" onclick="chatLoadPreset('odia1')">🎙️ Odia · drainage in Janla</button>
+              <button type="button" class="citizen-chip" onclick="chatLoadPreset('odia2')">🏫 Odia · school lab in Gohiria</button>
+              <button type="button" class="citizen-chip" onclick="chatLoadPreset('hindi')">💧 Hindi · pipeline in Dumduma</button>
+              <button type="button" class="citizen-chip" onclick="chatLoadPreset('bengali')">🩺 Bengali · health centre</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const officerThread = document.getElementById("officer-chat-messages");
+      if (officerThread) {
+        officerThread.innerHTML = `
+          <div class="bg-sky-50/60 border border-sky-200/80 rounded-2xl p-4 text-xs text-sky-900 space-y-1">
+            <div class="font-bold flex items-center gap-1.5"><i data-lucide="info" class="w-4 h-4 text-sky-600"></i> Fresh Analysis Session Started</div>
+            <div class="text-slate-600">Type or speak your inquiry, or attach photo evidence to start a new analysis session.</div>
+          </div>
+        `;
+      }
+
+      clearCitizenPhoto();
+      clearCitizenLocation();
+      showToast("New Chat Page", "Started a fresh new conversation page!", "info");
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function saveActiveChatSession() {
+      const token = currentSession && currentSession.token;
+      if (!token) return;
+
+      if (!activeChatSessionId) {
+        activeChatSessionId = `CHAT-${Date.now()}`;
+      }
+
+      const history = citizenConversationHistory;
+      if (!history || history.length === 0) return;
+
+      const firstUserMsg = history.find(m => m.role === "user")?.text || "New Chat";
+      const title = firstUserMsg.length > 32 ? firstUserMsg.slice(0, 32) + "…" : firstUserMsg;
+
+      try {
+        await fetch(`${BACKEND_URL}/chat-sessions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            id: activeChatSessionId,
+            title: title,
+            messages: history,
+            role: currentSession.role || "citizen"
+          })
+        });
+      } catch (err) {
+        console.warn("[ChatHistory] Auto-save failed:", err);
+      }
+    }
+
+    function toggleChatHistoryDrawer() {
+      const drawer = document.getElementById("chat-history-drawer-overlay");
+      if (!drawer) return;
+      const isHidden = drawer.classList.contains("hidden");
+      if (isHidden) {
+        drawer.classList.remove("hidden");
+        loadChatHistoryList();
+      } else {
+        drawer.classList.add("hidden");
+      }
+    }
+
+    function closeChatHistoryDrawer(event) {
+      if (event) event.stopPropagation();
+      const drawer = document.getElementById("chat-history-drawer-overlay");
+      if (drawer) drawer.classList.add("hidden");
+    }
+
+    async function loadChatHistoryList() {
+      const listEl = document.getElementById("chat-history-list");
+      if (!listEl) return;
+      listEl.innerHTML = `<div class="citizen-tracker-empty text-xs text-slate-400">Loading chat history…</div>`;
+
+      const token = currentSession && currentSession.token;
+      if (!token) {
+        listEl.innerHTML = `<div class="citizen-tracker-empty text-xs text-slate-400">Please log in to view chat history.</div>`;
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/chat-sessions`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const sessions = data.sessions || [];
+
+        if (sessions.length === 0) {
+          listEl.innerHTML = `
+            <div class="p-6 text-center text-xs text-slate-400">
+              <i data-lucide="message-square-off" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+              No previous chat history found.<br>Click <b>+ New Chat</b> to start a conversation!
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        listEl.innerHTML = sessions.map(s => {
+          const dateStr = new Date(s.updatedAt || s.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+          const msgCount = (s.messages || []).length;
+          return `
+            <div onclick="openPastChatSession('${s.id}')" class="p-3 bg-white hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-300 rounded-xl transition-all cursor-pointer flex items-center justify-between group shadow-sm">
+              <div class="flex items-center gap-2.5 overflow-hidden">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-xs">💬</div>
+                <div class="truncate">
+                  <div class="text-xs font-bold text-slate-800 truncate">${escapeHtml(s.title || "Chat Session")}</div>
+                  <div class="text-[10px] text-slate-400">${dateStr} · ${msgCount} msgs</div>
+                </div>
+              </div>
+              <button onclick="deleteChatSession(event, '${s.id}')" title="Delete chat session" class="p-1.5 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-lg transition-all">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          `;
+        }).join("");
+
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        listEl.innerHTML = `<div class="citizen-tracker-empty text-xs text-slate-400">Could not load chat history.</div>`;
+      }
+    }
+
+    async function openPastChatSession(sessionId) {
+      closeChatHistoryDrawer();
+      const token = currentSession && currentSession.token;
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/chat-sessions`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const session = (data.sessions || []).find(s => s.id === sessionId);
+
+        if (!session) return;
+
+        activeChatSessionId = session.id;
+        citizenConversationHistory = session.messages || [];
+
+        const thread = document.getElementById("citizen-chat-thread");
+        if (thread) {
+          thread.innerHTML = "";
+          citizenConversationHistory.forEach(m => {
+            appendCitizenMessage(m.role, escapeHtml(m.text));
+          });
+        }
+
+        showToast("Chat Restored", `Loaded: "${session.title}"`, "info");
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        showToast("Error", "Could not load selected chat session.", "error");
+      }
+    }
+
+    async function deleteChatSession(event, sessionId) {
+      if (event) event.stopPropagation();
+      const token = currentSession && currentSession.token;
+      if (!token) return;
+
+      try {
+        await fetch(`${BACKEND_URL}/chat-sessions/${sessionId}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (activeChatSessionId === sessionId) {
+          startNewChatSession();
+        } else {
+          loadChatHistoryList();
+        }
+        showToast("Deleted", "Chat session removed from history.", "info");
+      } catch (err) {
+        console.warn("Delete session failed:", err);
+      }
+    }
+
     function toggleCitizenVoice() {
       const micBtn = document.getElementById("citizen-mic-btn");
       const input = document.getElementById("citizen-chat-input");
@@ -3795,6 +4036,7 @@
 
         document.getElementById(typingId).remove();
         citizenConversationHistory.push({ role: "assistant", text: data.reply || "" });
+        saveActiveChatSession();
 
         // Photo/GPS-detected ward is more reliable than anything the model
         // can infer from text alone, so it takes priority when present.
@@ -3805,6 +4047,7 @@
 
         if (!isComplete) {
           appendCitizenMessage("assistant", escapeHtml(data.reply || "Could you tell me more?"));
+          saveActiveChatSession();
           return;
         }
 
